@@ -25,7 +25,7 @@ module.exports = class TopupReportsRepository {
         ON user_drivers.id = rfid_cards.user_driver_id
         WHERE topup_logs.user_type = 'USER_DRIVER' AND topup_logs.cpo_owner_id = (
             SELECT id FROM cpo_owners
-            WHERE user_id = userID
+            WHERE user_id = ?
         )
         ORDER BY date_created DESC`;
 		return new Promise((resolve, reject) => {
@@ -33,6 +33,32 @@ module.exports = class TopupReportsRepository {
 				if (err) {
 					reject(err);
 				}
+				resolve(result);
+			});
+		});
+	}
+
+	GetTopupSalesSummary(userID) {
+		const query = ` 
+            SELECT 
+            *,
+            ABS((total_topups - total_voids)) AS total_user_topup_sales
+        FROM (
+            SELECT 
+                SUM(CASE WHEN type = 'TOPUP' AND payment_status = 'success' THEN amount ELSE 0 END) AS total_topups,
+                SUM(CASE WHEN type = 'VOID' AND payment_status = 'success' THEN amount ELSE 0 END) AS total_voids
+            FROM topup_logs
+            WHERE cpo_owner_id = (
+                SELECT id FROM cpo_owners
+                WHERE user_id = ?
+            )
+        ) AS topup_summary`;
+		return new Promise((resolve, reject) => {
+			mysql.query(query, [userID], (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
 				resolve(result);
 			});
 		});
