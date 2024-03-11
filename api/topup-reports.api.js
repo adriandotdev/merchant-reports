@@ -7,6 +7,9 @@ const { AccessTokenVerifier } = require("../middlewares/TokenMiddleware");
 const { HttpForbidden } = require("../utils/HttpError");
 const logger = require("../config/winston");
 
+/**
+ * @param {import('express').Express} app
+ */
 module.exports = (app) => {
 	const service = new TopupReportsService();
 
