@@ -1,7 +1,11 @@
 const TopupReportsService = require("../services/TopupReportsService");
 
 // middleware
-const { AccessTokenVerifier } = require("../middlewares/TokenMiddleware");
+const TokenMiddleware = require("../middlewares/TokenMiddleware");
+const {
+	ROLES,
+	RoleManagementMiddleware,
+} = require("../middlewares/RoleManagementMiddleware");
 
 // Utitilities
 const { HttpForbidden } = require("../utils/HttpError");
@@ -12,10 +16,19 @@ const logger = require("../config/winston");
  */
 module.exports = (app) => {
 	const service = new TopupReportsService();
+	const tokenMiddleware = new TokenMiddleware();
+	const roleMiddleware = new RoleManagementMiddleware();
 
 	app.get(
 		"/admin_reports/api/v1/reports/sales/topup",
-		[AccessTokenVerifier],
+		[
+			tokenMiddleware.AccessTokenVerifier(),
+			roleMiddleware.CheckRole(ROLES.CPO_OWNER),
+		],
+		/**
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 */
 		async (req, res) => {
 			try {
 				if (req.role !== "CPO_OWNER") throw new HttpForbidden("Forbidden", []);
@@ -41,7 +54,14 @@ module.exports = (app) => {
 
 	app.get(
 		"/admin_reports/api/v1/reports/sales/topup/summary",
-		[AccessTokenVerifier],
+		[
+			tokenMiddleware.AccessTokenVerifier(),
+			roleMiddleware.CheckRole(ROLES.CPO_OWNER),
+		],
+		/**
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 */
 		async (req, res) => {
 			try {
 				if (req.role !== "CPO_OWNER") throw new HttpForbidden("Forbidden", []);
