@@ -1,4 +1,5 @@
 const TopupReportsRepository = require("../repository/TopupReportsRepository");
+const Crypto = require("../utils/Crypto");
 
 /**
  * @class Services for retrieving topup sales report.
@@ -21,7 +22,16 @@ module.exports = class TopupReportsService {
 	async GetTopupSales(userID) {
 		const result = await this.#repository.GetTopupSales(userID);
 
-		return result;
+		const newResult = result.map((data) => {
+			return {
+				...data,
+				name: Crypto.Decrypt(data.name),
+				mobile_number: Crypto.Decrypt(data.mobile_number),
+				reference_no: "U" + String(data.reference_no).padStart(10, "0"),
+			};
+		});
+
+		return newResult;
 	}
 
 	/**

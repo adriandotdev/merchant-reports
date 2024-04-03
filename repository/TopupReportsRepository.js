@@ -4,6 +4,7 @@ module.exports = class TopupReportsRepository {
 	GetTopupSales(userID) {
 		const query = `
         SELECT 
+            cpo_owners.party_id,
             cpo_owners.cpo_owner_name,
             rfid_cards.rfid_card_tag,
             user_drivers.name,
