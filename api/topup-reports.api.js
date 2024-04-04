@@ -20,7 +20,7 @@ module.exports = (app) => {
 	const roleMiddleware = new RoleManagementMiddleware();
 
 	app.get(
-		"/admin_reports/api/v1/reports/sales/topup",
+		"/merchant_reports/api/v1/reports/sales/topup",
 		[
 			tokenMiddleware.AccessTokenVerifier(),
 			roleMiddleware.CheckRole(ROLES.CPO_OWNER),
@@ -53,7 +53,7 @@ module.exports = (app) => {
 	);
 
 	app.get(
-		"/admin_reports/api/v1/reports/sales/topup/summary",
+		"/merchant_reports/api/v1/reports/sales/topup/summary",
 		[
 			tokenMiddleware.AccessTokenVerifier(),
 			roleMiddleware.CheckRole(ROLES.CPO_OWNER),
