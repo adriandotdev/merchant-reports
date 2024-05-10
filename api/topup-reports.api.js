@@ -29,25 +29,33 @@ module.exports = (app) => {
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
 		 */
-		async (req, res) => {
+		async (req, res, next) => {
 			try {
+				logger.info({
+					GET_SALES_REQUEST: {
+						data: {
+							id: req.id,
+						},
+						message: "SUCCESS",
+					},
+				});
+
 				if (req.role !== "CPO_OWNER") throw new HttpForbidden("Forbidden", []);
 
 				const result = await service.GetTopupSales(req.id);
+
+				logger.info({
+					GET_SALES_RESPONSE: {
+						message: "SUCCESS",
+					},
+				});
 
 				return res
 					.status(200)
 					.json({ status: 200, data: result, message: "Success" });
 			} catch (err) {
-				logger.error({ GET_RFID_USERS_API_ERROR: { message: err.message } });
-
-				logger.error(err);
-
-				return res.status(err.status || 500).json({
-					status: err.status || 500,
-					data: err.data || [],
-					message: err.message || "Internal Server Error",
-				});
+				req.error_name = "GET_SALES_ERROR";
+				next(err);
 			}
 		}
 	);
@@ -62,26 +70,59 @@ module.exports = (app) => {
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
 		 */
-		async (req, res) => {
+		async (req, res, next) => {
 			try {
+				logger.info({
+					GET_TOPUP_SALES_SUMMARY_REQUEST: {
+						data: {
+							id: req.id,
+						},
+						message: "SUCCESS",
+					},
+				});
+
 				if (req.role !== "CPO_OWNER") throw new HttpForbidden("Forbidden", []);
 
 				const result = await service.GetTopupSalesSummary(req.id);
+
+				logger.info({
+					GET_TOPUP_SALES_SUMMARY_RESPONSE: {
+						message: "SUCCESS",
+					},
+				});
 
 				return res
 					.status(200)
 					.json({ status: 200, data: result, message: "Success" });
 			} catch (err) {
-				logger.error({ GET_RFID_USERS_API_ERROR: { message: err.message } });
-
-				logger.error(err);
-
-				return res.status(err.status || 500).json({
-					status: err.status || 500,
-					data: err.data || [],
-					message: err.message || "Internal Server Error",
-				});
+				req.error_name = "GET_TOPUP_SALES_SUMMARY_ERROR";
+				next(err);
 			}
 		}
 	);
+
+	app.use((err, req, res, next) => {
+		logger.error({
+			API_REQUEST_ERROR: {
+				error_name: req.error_name || "UNKNOWN_ERROR",
+				message: err.message,
+				stack: err.stack.replace(/\\/g, "/"), // Include stack trace for debugging
+				request: {
+					method: req.method,
+					url: req.url,
+					code: err.status || 500,
+				},
+				data: err.data || [],
+			},
+		});
+
+		const status = err.status || 500;
+		const message = err.message || "Internal Server Error";
+
+		res.status(status).json({
+			status,
+			data: err.data || [],
+			message,
+		});
+	});
 };
